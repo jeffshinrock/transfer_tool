@@ -53,11 +53,8 @@ function transfer_tool_settings_form_validate($form, &$form_state){
 }
 
 function transfer_tool_settings_form_submit($form, &$form_state){
-
-  //dpm(file_create_url($form['csv']['#file']->uri));
   
   if(!empty($form_state['values']['csv']) && !empty($form_state['values']['type'])){
-    //dpm($form['csv']['#file']);
     $data = transfer_tool_import_data($form_state['values']['type'],drupal_realpath($form['csv']['#file']->uri));
     dpm($data);
   }
