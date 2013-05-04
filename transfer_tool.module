@@ -1,0 +1,351 @@
+<?php
+	//Create session to store data for user session
+	session_start();
+
+include_once('transfer_tool.import.inc');
+include_once('transfer_tool.class.inc');
+include_once('transfer_tool.blocks.inc');
+include_once('transfer_tool.forms.inc');
+
+function transfer_tool_permission(){
+ return array(
+    'administer transfer tool' => array(
+      'title' => t('Administer transfer tool settings'),
+      'description' => t('Configure transfer tool settings.'),
+    ),
+  );
+}
+	
+function transfer_tool_menu(){
+  $items = array();
+  
+  $items['transferapp/courses'] = array(
+    'title' => 'Mount Mercy Transfer Equivalencies',
+    'page callback' => 'transfer_tool_page',
+    'access arguments' => array(1),
+    'type' => MENU_CALLBACK, 
+  );
+  
+  $items['admin/config/transfertool'] = array(
+    'title' => 'Mount Mercy Transfer Tool Settings',
+    'page callback' => 'drupal_get_form',
+    'access arguments' => array('administer transfer tool'),
+    'page arguments' => array('transfer_tool_settings_form'),
+    'file' => 'transfer_tool.admin.inc',
+    'type' => MENU_LOCAL_TASK,
+  );
+  
+  $items['transferapp/add'] = array(
+    'page callback' => 'transfer_tool_write_history',
+    'access arguments' => array(1),
+    'type' => MENU_CALLBACK,
+  );
+  
+  $items['transferapp/remove'] = array(
+    'page callback' => 'transfer_tool_remove_history',
+    'access arguments' => array(1),
+    'type' => MENU_CALLBACK,
+  );
+  
+  $items['transferapp/get'] = array(
+    'page callback' => 'transfer_tool_get_history',
+    'access arguments' => array(1),
+    'type' => MENU_CALLBACK,
+  );
+  
+  $items['test/1'] = array(
+    'page callback' => 'transfer_tool_get_history',
+    'access arguments' => array(1),
+    'type' => MENU_CALLBACK,
+  );
+  
+  $items['transfer/refresh-elements'] = array(
+    'page callback' => 'transfer_tool_refresh',
+    'access arguments' => array(1),
+    'theme callback' => 'ajax_base_page_theme',
+    'page arguments' => array(1),
+    'type' => MENU_CALLBACK,
+  );
+  
+  return $items;
+  
+}
+
+/*
+function transfer_tool_forms($form_id, $args){
+  $forms = array();
+  if (strpos($form_id,'transfer_tool_set_history_form_') === 0) {
+    $forms[$form_id] = array(
+      'callback' => 'transfer_tool_set_history_form',
+      'callback arguments' => $args,
+    );
+  }
+  return $forms;  
+}
+*/
+
+function transfer_tool_init(){
+
+  drupal_add_js(drupal_get_path('module','transfer_tool') . "/js/transfer_tool.js");
+  drupal_add_js(array('transfer_tool' => array('path' => drupal_get_path('module','transfer_tool'))),'setting');
+  drupal_add_css(drupal_get_path('module','transfer_tool') . "/css/transfer_tool.css");
+  drupal_add_library('system', 'drupal.ajax');
+}
+	
+
+function transfer_tool_error_message(){
+  drupal_set_message("We're having some trouble with the transfer tool right now, please try again later. Our webmaster has been notified.",'error');
+}
+
+function transfer_tool_create_markup($search_org_id, $orgs){
+
+  $markup = '';
+  
+  return $markup;
+	
+ 	/*
+$markup .= '<table cellspacing="0" align="left" width="100%">';
+  	$markup .= '<tr>';
+    	$markup .= '<td colspan="2">';
+				$markup /= '<span style="text-align: left; margin-bottom: 10px; font-size: 2em; font-weight: none; padding: 3px; color: #1D2C3F; line-height: 1.2em">Search for Transfer Equivalencies</span>';
+				$markup /= '<br /><br />';
+			$markup .= '</td>';
+		$markup .= '</tr>';
+        $markup .= '<tr align="left">';
+			 $markup /= '<td align="right" width = "100px">';
+				$markup .= '<form action="transfer/equivalencies" method="post">';
+                    $markup .= '<b>Institution:</b>';
+			$markup .= '</td>';
+			$markup .= '<td width = "100%">';
+				$markup .= '<select name="OrgId">';
+						$markup .= '<option disabled = "true">Please Select An Institution</option>';
+            foreach($orgs as $key => $org){  
+            	$markup .= '<option value = "' . $key . '"'; 
+              if($search_org_id == $key) { 
+								$markup .= ' selected '; 
+							} 
+  						$markup .= '>';
+           	  $markup .= $org ;  
+              $markup .= '</option>';              
+            } 
+				$markup .= '</select>';
+				<? if($FLAG_ERROR == "ORGID") {
+					echo "<font color='red'>*** Please Select an Institution</font>";
+				}?>
+			</td>
+		</tr>
+		<tr>
+			<td align="right">
+				<b>Course:</b> 
+			</td>
+			<td>
+				<input type="text" name="CourseID" value="<? echo $search_course_id; ?>" /> <span style="font-size: small;">(ex. CS 101)</span><br />
+				<span style="font-size: .8em">Enter a Course ID from your institution to view its Mt Mercy equivalent</span>
+			</td>
+		</tr>
+		<tr>
+			<td></td>
+			<td>
+				<input type="submit" value="Submit Course" />
+				<div style="float: right; margin-right: 100px;"><a href="#history">Jump to History</a></div>
+				</form>
+			</td>
+	    </tr>
+		<!--
+			Display Results if Results were found.
+		-->
+		<? if($transferCoursesResult && $FLAG_ERROR != "NFD") { ?>
+		<tr>
+			<td colspan="2">
+				<br>
+				<table width="100%" style="margin-bottom: 50px">
+					<tr>
+						<span style="text-align: left; margin-bottom: 10px; font-size: 1.2em; font-weight: bold; padding: 3px; color: #1D2C3F; line-height: 1.4em">Matches Found</span>
+					<tr>
+						<td><center><b><u>Transfer Course ID</u></b></center></td>
+						<td><b><u>Transfer Course Name</u></b></td>
+						<td><center><b><u>MMU Course ID</u></b></center></td>
+						<td><b><u>MMU Course Name</u></b></td>
+						<td><center><b><u>Save to History</u></b></center></td>
+					</tr>
+				<? while($row = mysql_fetch_assoc($transferCoursesResult)) { ?>
+					<tr>
+						<td><center><? echo $row['TRANSFER_EVENT_ID']; ?></center></td>
+						<td><? echo $row['TRANSFER_COURSE_NAME']; ?></td>
+						<td><center><? echo $row['MMU_EVENT_ID']; ?></center></td>
+						<td><? echo $row['MMU_COURSE_NAME']; ?></td>
+						<td><center><form action="index.php#history" method="post">
+								<input type="hidden" name="OrgId" value="<? echo $search_org_id; ?>">
+								<input type="hidden" name="CourseID" value="<? echo $search_course_id; ?>">
+								<input type="hidden" name="SelectedTransCourseId" value="<? echo $row['TRANSFER_EVENT_ID']; ?>">
+								<input type="hidden" name="SelectedTransCourseName" value="<? echo $row['TRANSFER_COURSE_NAME']; ?>">
+								<input type="hidden" name="SelectedMMUCourseId" value="<? echo $row['MMU_EVENT_ID']; ?>">
+								<input type="hidden" name="SelectedMMUCourseName" value="<? echo $row['MMU_COURSE_NAME']; ?>">
+								<input type="submit" value="Save">
+							</form></center>
+						</td>
+					</tr>
+				<? } ?>
+				</table>
+			</td>
+		</tr>
+		<!--
+			No results were found so give feeback to the user.
+		-->
+		<? } else if($FLAG_ERROR == "NFD"){ ?>
+		<tr>
+			<td colspan = "2">
+				<br><div style="font-size: large;font-weight: bold;padding: 3px;"><? echo "Sorry, but no matches were found"; ?></div>
+			</td>
+		</tr>
+		<!--
+			Display history to the user.
+		-->
+		<? } if(!empty($_SESSION['History'])) { ?>
+		<tr>
+			<td colspan="2">
+				<br>
+				<table width="100%" style="margin-bottom: 50px">
+					<tr>
+						<span style="text-align: left; margin-bottom: 10px; font-size: 1.2em; font-weight: bold; padding: 3px; color: #1D2C3F; line-height: 1.4em"><a name="history">History</a></span>
+					<tr>
+						<td><center><b><u>Transfer Course ID</u></b></center></td>
+						<td><b><u>Transfer Course Name</u></b></td>
+						<td><center><b><u>MMU Course ID</u></b></center></td>
+						<td><b><u>MMU Course Name</u></b></td>
+						<td><center><b><u>Remove from History</u></b></center></td>
+					</tr>
+				<?  $i = 0;
+					foreach($_SESSION['transfer_tool_history'] as $course) { ?>
+					<tr>
+						<td><center><? echo $course->transferCourseId; ?></center></td>
+						<td><? echo $course->transferCourseName; ?></td>
+						<td><center><? echo $course->mmuCourseId; ?></center></td>
+						<td><? echo $course->mmuCourseName; ?></td>
+						<td><center><form action="index.php#history" method="post">
+								<input type="hidden" name="OrgId" value="<? echo $search_org_id; ?>">
+								<input type="hidden" name="CourseID" value="<? echo $search_course_id; ?>">
+								<input type="hidden" name="Action" value="remove">
+								<input type="hidden" name="Row" value="<? echo $i ?>">
+								<input type="submit" value="Remove">
+							</form></center>
+						</td>
+					</tr>
+				<? 	$i++;
+					} ?>
+					<tr>
+						<td colspan="4">
+						<td>
+							<center><form action="index.php" method="post">
+								<input type="hidden" name="OrgId" value="<? echo $search_org_id; ?>">
+								<input type="hidden" name="CourseID" value="<? echo $search_course_id; ?>">
+								<input type="hidden" name="Action" value="clear">
+								<input type="submit" value="Clear History">
+							</form></center>
+						</td>
+					</tr>
+				</table>
+			</td>
+		</tr>
+		<? } ?>
+	</table>
+*/
+	
+}
+
+
+
+function theme_transfer_tool_remove(&$vars){
+  dpm($vars);
+  
+  $form = $vars['form'];
+  
+  $output .= drupal_render_children($form);
+  
+  return $output;
+}
+
+function transfer_tool_write_history($form, &$form_state){
+
+  dpm('test');
+  
+/*
+  $result = db_query("SELECT ORG_CODE_ID, TRANSFER_EVENT_ID, TRANSFER_EVENT_TYPE, TRANSFER_COURSE_NAME, MMU_EVENT_ID, MMU_EVENT_TYPE, MMU_COURSE_NAME FROM {transfer_tool_courses} WHERE ORG_CODE_ID = :org_code_id AND REPLACE(TRANSFER_EVENT_ID,' ','') = :transfer_event", array(":org_code_id" => $_POST['org'], ":transfer_event" => $_POST['course']));
+  
+  $record = $result->fetchObject();
+  
+  $_SESSION['transfer_tool_history'][] = $record;
+*/
+
+}
+
+function transfer_tool_get_history(){
+  if(!empty($_SESSION['transfer_tool_history'])){
+    $courses = array();
+    foreach($_SESSION['transfer_tool_history'] as $course){
+      $history = array(
+        'id' => $course->transferCourseId,
+        'name' => $course->transferCourseName,
+        'mmu_id' => $course->mmuCourseId,
+        'mmu_name' => $course->mmuCourseName, 
+      );
+      array_push($courses, $history);
+    }  
+  }
+  
+}
+
+function transfer_tool_ajax_theme() {
+   $themes = array(
+      'history_box_theme' => array(
+         'render element' => 'form',
+      ),
+   );
+   return $themes;
+}
+
+function theme_history_box_theme($variables) {
+   $form = $variables['form'];
+   $output = '';
+   if(!empty($form)) {
+      $headers = array();
+      $rows = array();
+      foreach(element_children($form) as $num => $line_items) {
+         $td = array();
+         foreach(element_children($form[$num]) as $field) {
+            $type = $form[$num][$field]['#type'];
+            if($type == 'hidden') {
+               $td[0]['data'] .= drupal_render($form[$num][$field]);
+            } else {
+               $headers[$field] = array('data' => $field, 'class' => array('history-header-'.$field));
+               $td[] = array('data' => drupal_render($form[$num][$field]), 'class' => array('history-field-'.$field));
+            }
+         }
+         $rows[] = $td;
+      }
+      $table = theme('table', array('header' => $headers, 'rows' => $rows));
+      $output .=  $table;
+   } 
+   $output .= drupal_render_children($form);
+   dd('yes');
+   return $output;
+}
+
+function transfer_tool_get_orgs(){
+	// Do search for Organizations to populate the Institution Dropdown box.
+	$organizationSQL = "SELECT org_code_id, org_name FROM {transfer_tool_orgs} ORDER BY org_name";
+	$organizationResult = db_query($organizationSQL);  
+	
+	$orgs = array();
+	
+	if ($organizationResult->rowCount() == 0)  { 
+    watchdog('Transfer Tool','No Organizations Found');
+    transfer_tool_error_message(); 
+  } else {
+    foreach($organizationResult as $org){
+      $orgs[$org->org_code_id] = $org->org_name;
+    }     
+  }
+  
+  return $orgs;  
+}

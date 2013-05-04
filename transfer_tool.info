@@ -1,0 +1,8 @@
+name = Mount Mercy Transfer Tool
+description = Transfer tool module for Mount Mercy University
+package = Mount Mercy University
+files[] = transfer_tool.import.inc
+files[] = transfer_tool.class.inc
+files[] = transfer_tool.admin.inc
+configure = admin/config/transfertool
+core = 7.x
