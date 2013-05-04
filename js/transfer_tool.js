@@ -38,6 +38,7 @@
   
     $('body').delegate('.add_to_basket','click',function(){
       $attrs = {};
+      $attrs.inst = $(this).attr('inst');
       $attrs.tid = $(this).attr('tid');
       $attrs.tcn = $(this).attr('tcn');
       $attrs.mid = $(this).attr('mid');
@@ -64,7 +65,7 @@
     });
     
     $('body').delegate('.print-courses','click',function(){
-      PrintElem('#'+$(this).attr('elem'),$(this).attr('path'));
+      PrintElem('#'+$(this).attr('elem'),$(this).attr('path'),$(this).attr('args'));
       $(this).attr('style','');
     });
     
@@ -98,7 +99,7 @@
       $('.print-courses.results').show();
     } else {
       $path = Drupal.settings.transfer_tool.path;
-      $("#history-box").html('<a name="saved"></a><h3>Saved Courses</h3><table id="courses-list"><thead><tr><th>Transfer Course ID</th><th>Transfer Course Name</th><th>MMU Course ID</th><th>MMU Course Name</th><th class="optional">Remove</th></tr><tr class="no-courses odd"><td>No Saved Courses</td><td></td><td></td><td></td><td></td></tr></table><p><a href="javascript:;" class="print-courses" elem="history-box" path="'+$path+'">Print matches</a></p>');
+      $("#history-box").html('<a name="saved"></a><h3>Saved Courses</h3><table id="courses-list"><thead><tr><th>Institution</th><th>Transfer Course ID</th><th>Transfer Course Name</th><th>MMU Course ID</th><th>MMU Course Name</th><th class="optional">Remove</th></tr><tr class="no-courses odd"><td>No Saved Courses</td><td></td><td></td><td></td><td></td><td></td></tr></table><p><a href="javascript:;" class="print-courses" elem="history-box" path="'+$path+'">Print matches</a></p>');
     }
     
   }
@@ -135,34 +136,43 @@
   function make_history_obj(obj){
     var markup = '';
     markup += '<tr class="course odd" key="'+obj.key+'">';
-        markup += '<td>'+obj.tid+'</td>';
-        markup += '<td>'+obj.tcn+'</td>';
-        markup += '<td>'+obj.mid+'</td>';
-        markup += '<td>'+obj.mcn+'</td>';
-        markup += '<td class="optional"><a href="javascript:void(0)" class="remove_from_basket">Remove</a></td>';
+      markup += '<td>'+obj.inst+'</td>';
+      markup += '<td>'+obj.tid+'</td>';
+      markup += '<td>'+obj.tcn+'</td>';
+      markup += '<td>'+obj.mid+'</td>';
+      markup += '<td>'+obj.mcn+'</td>';
+      markup += '<td class="optional"><a href="javascript:void(0)" class="remove_from_basket">Remove</a></td>';
     markup += '</tr>';
     
     return markup;
   }
   
-  function PrintElem(elem, path){
-      Popup($(elem).html(),path);
+  function PrintElem(elem, path, args){
+      Popup($(elem).html(),path, args);
   }
 
-  function Popup(data, path){
-      var mywindow = window.open('', 'Print Transfer Courses', 'height=600,width=800');
-      mywindow.document.write('<html><head><title>Print Transfer Courses</title>');
-      mywindow.document.write('<link rel="stylesheet" href="'+path+'/css/transfer_tool_print.css" type="text/css" />');
-      mywindow.document.write('</head><body >');
-      mywindow.document.write('<div id="header"><div id="logo"></div></div><div id="content">');
-      mywindow.document.write(data);
-      mywindow.document.write('</div></body></html>');
+  function Popup(data, path, args){
+  
+    if(args != ""){
+      var heading = "<h1>"+args+" Transer Courses</h1>";
+    } else {
+      var heading = "";
+    }
+    
+    var mywindow = window.open('', 'Print Transfer Courses', 'height=600,width=800');
+    mywindow.document.write('<html><head><title>Print Transfer Courses</title>');
+    mywindow.document.write('<link rel="stylesheet" href="'+path+'/css/transfer_tool_print.css" type="text/css" />');
+    mywindow.document.write('</head><body >');
+    mywindow.document.write('<div id="header"><div id="logo"></div></div><div id="content">');
+    mywindow.document.write(heading);
+    mywindow.document.write(data);
+    mywindow.document.write('</div></body></html>');
 
-      mywindow.print();
-      mywindow.close();
+    mywindow.print();
+    mywindow.close();
 
-      return true;
-    }  
+    return true;
+  }  
   
   
 }(jQuery))

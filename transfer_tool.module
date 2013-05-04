@@ -137,3 +137,8 @@ function transfer_tool_get_orgs(){
   
   return $orgs;  
 }
+
+function transfer_tool_get_org_name($org){
+  $result = db_query("SELECT org_name FROM {transfer_tool_orgs} WHERE org_code_id = :org_id",array(':org_id' => $org))->fetchObject();
+	return $result->org_name; 
+}

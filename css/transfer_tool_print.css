@@ -1,4 +1,4 @@
-@media print{
+
 
   .optional, .print-courses{
     display: none !important;
@@ -49,4 +49,3 @@
     border-top: 1px solid #ccc;
   }
 
-}

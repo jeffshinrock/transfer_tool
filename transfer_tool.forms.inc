@@ -39,7 +39,7 @@ function transfer_tool_form($form, &$form_state, $vars){
     '#type' => 'markup',
     '#prefix' => '<div id="history-box">',
     '#suffix' => '</div>',
-    '#markup' => '<a name="saved"></a><h3>My Courses</h3><table id="courses-list"><thead><tr><th>Transfer Course ID</th><th>Transfer Course Name</th><th>MMU Course ID</th><th>MMU Course Name</th><th class="optional">Remove</th></tr><tr class="no-courses odd"><td>No Saved Courses</td><td></td><td></td><td></td><td></td></tr></table><p><a href="javascript:;" class="print-courses results" elem="history-box" path="'.drupal_get_path('module','transfer_tool').'">Print courses</a></p>',
+    '#markup' => '<a name="saved"></a><h3>My Courses</h3><table id="courses-list"><thead><tr><th>Institution</th><th>Transfer Course ID</th><th>Transfer Course Name</th><th>MMU Course ID</th><th>MMU Course Name</th><th class="optional">Remove</th></tr><tr class="no-courses odd"><td>No Saved Courses</td><td></td><td></td><td></td><td></td><td></td></tr></table><p><a href="javascript:;" class="print-courses results" elem="history-box" path="'.drupal_get_path('module','transfer_tool').'" args="'.$vals['orgId'].'">Print courses</a></p>',
   );
   
   return $form;
@@ -108,7 +108,7 @@ function transfer_tool_form_submit($form,&$form_state){
   	    'tcn' => $course->TRANSFER_COURSE_NAME,
   	    'mid' => $course->MMU_EVENT_ID,
   	    'mcn' => $course->MMU_COURSE_NAME,
-  	    'key' => array('data' => '<a href="javascript:void(0)" class="add_to_basket btn optional" tid="'.$course->TRANSFER_EVENT_ID.'" tcn="'.$course->TRANSFER_COURSE_NAME.'" mid="'.$course->MMU_EVENT_ID.'" mcn="'.$course->MMU_COURSE_NAME.'" key="'.$key['key'].'">Add to basket</a>','class' => array('optional')),
+  	    'key' => array('data' => '<a href="javascript:void(0)" class="add_to_basket btn optional" inst="'.transfer_tool_get_org_name($course->ORG_CODE_ID).'" tid="'.$course->TRANSFER_EVENT_ID.'" tcn="'.$course->TRANSFER_COURSE_NAME.'" mid="'.$course->MMU_EVENT_ID.'" mcn="'.$course->MMU_COURSE_NAME.'" key="'.$key['key'].'">Add to basket</a>','class' => array('optional')),
       );
      $i++;
   	}
@@ -122,7 +122,7 @@ function transfer_tool_form_submit($form,&$form_state){
   
   $table = theme_table($vars);
   
-  $table .= '<p><a href="javascript:;" class="print-courses" elem="results-box" path="'.drupal_get_path('module','transfer_tool').'">Print matches</a></p>';
+  $table .= '<p><a href="javascript:;" class="print-courses" elem="results-box" path="'.drupal_get_path('module','transfer_tool').'" args="'.transfer_tool_get_org_name($values['OrgId']).'">Print matches</a></p>';
 	
   $element = $form['box'];
   $element['#markup'] = $table;
