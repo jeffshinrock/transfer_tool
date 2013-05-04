@@ -169,7 +169,7 @@
     mywindow.document.write('</div></body></html>');
 
     mywindow.print();
-    mywindow.close();
+    //mywindow.close();
 
     return true;
   }  
